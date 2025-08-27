@@ -209,6 +209,7 @@ plot_btn.pack(pady=20)
 root.mainloop()
 '''
 # Version: 1.3
+'''
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import messagebox
@@ -291,6 +292,118 @@ entry_min.set("-10")
 entry_max = ctk.CTkComboBox(frame_range, values=["10", "90", "100"], width=100)
 entry_max.grid(row=0, column=1, padx=10)
 entry_max.set("10")
+
+# Plot button
+plot_btn = ctk.CTkButton(root, text="📈 Plot Graph", command=plot_equation, width=170, height=45, corner_radius=15)
+plot_btn.pack(pady=20)
+
+root.mainloop()
+'''
+# Version: 1.4
+import customtkinter as ctk
+import tkinter as tk
+from tkinter import messagebox
+import numpy as np
+import matplotlib.pyplot as plt
+from sympy import sympify, symbols, lambdify
+
+# Define symbol
+x = symbols('x')
+
+ctk.set_appearance_mode("dark")   # "light" or "dark"
+ctk.set_default_color_theme("blue")
+
+def plot_equation():
+    eq_text = entry_eq.get().strip()
+    
+    # Remove "y=" if present
+    if "=" in eq_text:
+        eq_text = eq_text.split("=")[-1].strip()
+
+    try:
+        # Parse equation
+        expr = sympify(eq_text.replace("^", "**"))
+        func = lambdify(x, expr, "numpy")
+
+        # Get range values
+        try:
+            x_min = float(entry_min.get())
+            x_max = float(entry_max.get())
+        except ValueError:
+            messagebox.showerror("Error", "Please enter valid numbers for X range!")
+            return
+
+        if x_min >= x_max:
+            messagebox.showerror("Error", "X min should be less than X max!")
+            return
+
+        # Generate x values
+        X = np.linspace(x_min, x_max, 500)
+        Y = func(X)
+
+        # Get style and color
+        style_choice = style_box.get()
+        color_choice = color_box.get()
+
+        # Map style to matplotlib syntax
+        styles = {
+            "Line": "-",
+            "Dashed": "--",
+            "Dotted": ":",
+            "Scatter": "o"
+        }
+        line_style = styles.get(style_choice, "-")
+
+        # Plot
+        plt.figure(figsize=(6,4))
+        plt.plot(X, Y, line_style, label=f"y = {expr}", color=color_choice.lower(), linewidth=2)
+        plt.title(f"Graph of y = {expr}", fontsize=14, fontweight="bold")
+        plt.xlabel("x-axis")
+        plt.ylabel("y-axis")
+        plt.legend()
+        plt.grid(True, linestyle="--", alpha=0.6)
+        plt.show()
+
+    except Exception as e:
+        messagebox.showerror("Error", f"Invalid Equation!\n{e}")
+
+
+# ------------------ UI ------------------
+root = ctk.CTk()
+root.title("GraphyGen 📊")
+root.geometry("550x380")
+
+# Title
+title_label = ctk.CTkLabel(root, text="GraphyGen 📊", font=("Arial", 22, "bold"))
+title_label.pack(pady=10)
+
+# Equation entry
+entry_eq = ctk.CTkEntry(root, width=350, height=40, placeholder_text="Enter equation (e.g. y = sin(x))")
+entry_eq.pack(pady=10)
+
+# Frame for range
+frame_range = ctk.CTkFrame(root)
+frame_range.pack(pady=10)
+
+entry_min = ctk.CTkComboBox(frame_range, values=["-10", "-90", "0"], width=100)
+entry_min.grid(row=0, column=0, padx=10)
+entry_min.set("-10")
+
+entry_max = ctk.CTkComboBox(frame_range, values=["10", "90", "100"], width=100)
+entry_max.grid(row=0, column=1, padx=10)
+entry_max.set("10")
+
+# Style + Color options
+frame_options = ctk.CTkFrame(root)
+frame_options.pack(pady=10)
+
+style_box = ctk.CTkComboBox(frame_options, values=["Line", "Dashed", "Dotted", "Scatter"], width=120)
+style_box.grid(row=0, column=0, padx=10)
+style_box.set("Line")
+
+color_box = ctk.CTkComboBox(frame_options, values=["Blue", "Red", "Green", "Cyan", "Magenta", "Yellow", "Black"], width=120)
+color_box.grid(row=0, column=1, padx=10)
+color_box.set("Blue")
 
 # Plot button
 plot_btn = ctk.CTkButton(root, text="📈 Plot Graph", command=plot_equation, width=170, height=45, corner_radius=15)
